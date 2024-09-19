@@ -6,3 +6,4 @@
    Werkzeug==2.3.3
    google-cloud-vision==3.4.1
    fpdf2
+   google-generativeai

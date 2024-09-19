@@ -12,6 +12,7 @@ from PIL import Image
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.fonts import addMapping
+import google.generativeai as genai
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -43,9 +44,30 @@ def post_process_text(text):
   text = re.sub(r'\n{3,}', '\n\n', text)
   # Remove lines with only spaces
   text = '\n'.join([line for line in text.split('\n') if line.strip()])
+  
+  # Example API call to enhance text
+  # enhanced_text = enhance_text_with_api(text)
+  
   return text
 
-def combine_images(images, pages_per_image=2):
+def enhance_text_with_model(text):
+    # Initialize the generative model
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    
+    # Construct the input prompt with pre-instruction
+    prompt = (
+        "You are an expert in text correction. I have a text output from an OCR system containing Vietnamese language content. "
+        "The OCR output may have errors. Please provide the corrected version of the text without any explanations or additional comments.\n\n"
+        "Here is the OCR output that needs enhancement:\n\n"
+        f"{text}"
+    )
+    
+    # Generate the enhanced text
+    response = model.generate_content(prompt)
+    
+    return response.text
+
+def combine_images(images, pages_per_image=1):
   combined_images = []
   for i in range(0, len(images), pages_per_image):
       batch = images[i:i+pages_per_image]
@@ -126,7 +148,11 @@ def upload_file():
           # Clean up the uploaded file
           os.remove(filepath)
           
-          return send_file(output, as_attachment=True, download_name='ocr_result.pdf', mimetype='application/pdf')
+          # Create the download name with the original file name prefixed by "ocr_"
+          original_name = os.path.splitext(filename)[0]  # Get the original file name without extension
+          download_name = f"ocr_{original_name}.pdf"
+          
+          return send_file(output, as_attachment=True, download_name=download_name, mimetype='application/pdf')
   return render_template('index.html')
 
 if __name__ == '__main__':
