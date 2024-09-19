@@ -46,12 +46,17 @@ def post_process_text(text):
   text = '\n'.join([line for line in text.split('\n') if line.strip()])
   
   # Example API call to enhance text
-  # enhanced_text = enhance_text_with_api(text)
-  
+  #enhanced_text = enhance_text_with_LLM(text)
+  #text = enhanced_text
   return text
 
-def enhance_text_with_model(text):
+def enhance_text_with_LLM(text):
+    # Step 1: Read the API key from the file
+    with open('secrets/gemini_api_key.txt', 'r') as file:
+      GEMINI_API_KEY = file.read().strip()
+
     # Initialize the generative model
+    genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
     
     # Construct the input prompt with pre-instruction
@@ -94,7 +99,7 @@ def process_pdf(pdf_path, pages_per_image=2):
       img_byte_arr = img_byte_arr.getvalue()
       
       text += ocr_image(img_byte_arr) + "\n\n"
-      print(text)
+      #print(text)
   return post_process_text(text)
 
 @app.route('/', methods=['GET', 'POST'])
